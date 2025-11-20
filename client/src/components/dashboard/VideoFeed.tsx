@@ -1,6 +1,6 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { motion } from "framer-motion";
-import { ScanFace, Maximize, MoreHorizontal, User } from "lucide-react";
+import { Maximize, User, Target, Info } from "lucide-react";
 import cctvImage from "@assets/generated_images/cctv_footage_of_retail_store.png";
 
 interface BoundingBox {
@@ -11,26 +11,43 @@ interface BoundingBox {
   h: number;
   type: "Person" | "Staff";
   confidence: number;
-  gender: "M" | "F";
-  age: number;
+  gender: "Male" | "Female";
+  age: string;
+  action: "Walking" | "Browsing" | "Standing";
+  color: string;
+  history: {x: number, y: number}[];
 }
 
 export function VideoFeed() {
   const [boxes, setBoxes] = useState<BoundingBox[]>([
-    { id: 1, x: 20, y: 30, w: 10, h: 20, type: "Person", confidence: 98, gender: "F", age: 24 },
-    { id: 2, x: 45, y: 40, w: 12, h: 25, type: "Person", confidence: 95, gender: "M", age: 32 },
-    { id: 3, x: 70, y: 25, w: 9, h: 18, type: "Staff", confidence: 99, gender: "M", age: 28 },
+    { id: 4821, x: 20, y: 30, w: 10, h: 25, type: "Person", confidence: 98, gender: "Female", age: "24-28", action: "Browsing", color: "hsl(180, 100%, 50%)", history: [] },
+    { id: 4822, x: 45, y: 40, w: 12, h: 28, type: "Person", confidence: 95, gender: "Male", age: "30-35", action: "Walking", color: "hsl(217, 91%, 60%)", history: [] },
+    { id: 4823, x: 70, y: 25, w: 9, h: 22, type: "Staff", confidence: 99, gender: "Male", age: "25-30", action: "Standing", color: "hsl(280, 100%, 70%)", history: [] },
   ]);
 
-  // Simulate movement
+  // Simulate movement and tracking
   useEffect(() => {
     const interval = setInterval(() => {
-      setBoxes(prev => prev.map(box => ({
-        ...box,
-        x: Math.max(5, Math.min(90, box.x + (Math.random() - 0.5) * 2)),
-        y: Math.max(10, Math.min(80, box.y + (Math.random() - 0.5) * 2)),
-      })));
-    }, 1000);
+      setBoxes(prev => prev.map(box => {
+        const moveX = (Math.random() - 0.5) * 2.5;
+        const moveY = (Math.random() - 0.5) * 1.5;
+        
+        const newX = Math.max(5, Math.min(90, box.x + moveX));
+        const newY = Math.max(10, Math.min(75, box.y + moveY));
+        
+        // Update movement history (limit to last 10 points for trail)
+        const newHistory = [...box.history, { x: box.x + box.w/2, y: box.y + box.h }];
+        if (newHistory.length > 15) newHistory.shift();
+
+        return {
+          ...box,
+          x: newX,
+          y: newY,
+          history: newHistory,
+          action: Math.abs(moveX) > 0.5 ? "Walking" : "Browsing"
+        };
+      }));
+    }, 800);
     return () => clearInterval(interval);
   }, []);
 
@@ -40,18 +57,18 @@ export function VideoFeed() {
       <img 
         src={cctvImage} 
         alt="Live Feed" 
-        className="w-full h-full object-cover opacity-80 group-hover:opacity-90 transition-opacity"
+        className="w-full h-full object-cover opacity-75 group-hover:opacity-85 transition-opacity duration-500"
       />
       
-      {/* Scanlines Overlay */}
-      <div className="absolute inset-0 bg-[linear-gradient(transparent_50%,rgba(0,0,0,0.25)_50%)] bg-[length:100%_4px] pointer-events-none z-10"></div>
-      <div className="absolute inset-0 bg-primary/5 animate-pulse pointer-events-none z-10"></div>
+      {/* Scanlines & CRT Effect */}
+      <div className="absolute inset-0 bg-[linear-gradient(transparent_50%,rgba(0,0,0,0.25)_50%)] bg-[length:100%_4px] pointer-events-none z-10 opacity-50"></div>
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_50%,rgba(0,0,0,0.4)_100%)] pointer-events-none z-10"></div>
 
       {/* UI Overlays */}
       <div className="absolute top-4 left-4 z-20 flex items-center gap-2">
         <div className="flex items-center gap-1.5 px-2 py-1 bg-black/60 backdrop-blur border border-red-500/50 rounded text-xs text-red-500 font-mono font-bold">
           <div className="w-2 h-2 rounded-full bg-red-500 animate-ping"></div>
-          LIVE REC
+          LIVE ANALYTICS
         </div>
         <div className="px-2 py-1 bg-black/60 backdrop-blur border border-primary/30 rounded text-xs text-primary font-mono">
           CAM-01 [MAIN_ENTRANCE]
@@ -64,48 +81,85 @@ export function VideoFeed() {
         </button>
       </div>
 
-      {/* Bounding Boxes */}
+      {/* Bounding Boxes & Tracking */}
       {boxes.map(box => (
-        <motion.div
-          key={box.id}
-          className="absolute z-20 border border-primary/80 shadow-[0_0_10px_theme('colors.primary')/50]"
-          initial={false}
-          animate={{ 
-            left: `${box.x}%`, 
-            top: `${box.y}%`,
-            width: `${box.w}%`,
-            height: `${box.h}%`
-          }}
-          transition={{ duration: 1, ease: "linear" }}
-        >
-          {/* Corner Markers */}
-          <div className="absolute -top-0.5 -left-0.5 w-2 h-2 border-t-2 border-l-2 border-primary"></div>
-          <div className="absolute -top-0.5 -right-0.5 w-2 h-2 border-t-2 border-r-2 border-primary"></div>
-          <div className="absolute -bottom-0.5 -left-0.5 w-2 h-2 border-b-2 border-l-2 border-primary"></div>
-          <div className="absolute -bottom-0.5 -right-0.5 w-2 h-2 border-b-2 border-r-2 border-primary"></div>
+        <div key={box.id}>
+           {/* Tracking Trail */}
+           <svg className="absolute inset-0 w-full h-full pointer-events-none z-10 overflow-visible">
+              <polyline 
+                points={box.history.map(p => `${p.x}%,${p.y}%`).join(" ")}
+                fill="none"
+                stroke={box.color}
+                strokeWidth="2"
+                strokeOpacity="0.5"
+                strokeDasharray="4,4"
+              />
+           </svg>
 
-          {/* Info Label */}
-          <div className="absolute -top-6 left-0 bg-black/70 backdrop-blur border border-primary/30 px-1.5 py-0.5 flex flex-col min-w-[80px]">
-            <div className="flex items-center justify-between gap-2 text-[10px] text-primary font-mono">
-              <span className="font-bold">ID:{box.id}</span>
-              <span>{box.confidence}%</span>
+          <motion.div
+            className="absolute z-20"
+            initial={false}
+            animate={{ 
+              left: `${box.x}%`, 
+              top: `${box.y}%`,
+              width: `${box.w}%`,
+              height: `${box.h}%`
+            }}
+            transition={{ duration: 0.8, ease: "linear" }}
+          >
+            {/* Animated Box Corners */}
+            <div className="relative w-full h-full">
+                <div className="absolute top-0 left-0 w-3 h-3 border-t-2 border-l-2" style={{ borderColor: box.color }}></div>
+                <div className="absolute top-0 right-0 w-3 h-3 border-t-2 border-r-2" style={{ borderColor: box.color }}></div>
+                <div className="absolute bottom-0 left-0 w-3 h-3 border-b-2 border-l-2" style={{ borderColor: box.color }}></div>
+                <div className="absolute bottom-0 right-0 w-3 h-3 border-b-2 border-r-2" style={{ borderColor: box.color }}></div>
+                
+                {/* Center Target Reticle */}
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 opacity-50">
+                   <Target className="w-4 h-4 animate-pulse" style={{ color: box.color }} />
+                </div>
             </div>
-            <div className="flex items-center gap-1 text-[9px] text-white/80 font-sans">
-              <User className="w-2 h-2" />
-              <span>{box.gender} / {box.age}yo</span>
+
+            {/* Detailed Info Panel */}
+            <div className="absolute -top-14 -left-4 bg-black/80 backdrop-blur border border-primary/30 px-2 py-1.5 rounded shadow-xl min-w-[140px]">
+              <div className="flex items-center justify-between gap-3 text-[10px] font-mono border-b border-white/10 pb-1 mb-1">
+                <span className="font-bold text-white">ID: #{box.id}</span>
+                <span className="text-green-400">{box.confidence}%</span>
+              </div>
+              <div className="grid grid-cols-2 gap-x-2 gap-y-0.5 text-[9px] text-white/70 font-sans">
+                <div className="flex items-center gap-1">
+                   <User className="w-2.5 h-2.5" /> {box.gender}
+                </div>
+                <div>Age: {box.age}</div>
+                <div className="col-span-2 text-primary/90 uppercase tracking-wider font-bold text-[8px] mt-0.5">
+                  {box.action}...
+                </div>
+              </div>
+              
+              {/* Connecting Line */}
+              <div className="absolute bottom-[-6px] left-6 w-px h-[6px] bg-primary/50"></div>
+              <div className="absolute bottom-[-6px] left-6 w-1.5 h-1.5 rounded-full bg-primary translate-y-[3px] -translate-x-[2px]"></div>
             </div>
-          </div>
-        </motion.div>
+          </motion.div>
+        </div>
       ))}
 
-      {/* Bottom Info Bar */}
-      <div className="absolute bottom-0 left-0 right-0 h-8 bg-black/80 backdrop-blur border-t border-primary/20 flex items-center justify-between px-4 z-20">
-         <div className="text-xs text-muted-foreground font-mono">
-            FPS: 24.0 | BITRATE: 4096 KBPS | AI: ACTIVE
+      {/* Bottom Stats Bar */}
+      <div className="absolute bottom-0 left-0 right-0 h-10 bg-black/90 backdrop-blur border-t border-primary/20 flex items-center justify-between px-4 z-20">
+         <div className="flex gap-4 text-[10px] md:text-xs text-muted-foreground font-mono uppercase tracking-wider">
+            <span className="text-primary">Processing: YOLOv8-L</span>
+            <span>FPS: 24.1</span>
+            <span>Latency: 18ms</span>
          </div>
-         <div className="flex gap-4 text-xs text-primary font-mono">
-            <span>PERSON: {boxes.filter(b => b.type === 'Person').length}</span>
-            <span>STAFF: {boxes.filter(b => b.type === 'Staff').length}</span>
+         <div className="flex gap-4">
+            <div className="flex items-center gap-2 text-xs font-mono">
+                <span className="w-2 h-2 rounded-full bg-[hsl(180,100%,50%)]"></span>
+                <span className="text-white">Shopper</span>
+            </div>
+            <div className="flex items-center gap-2 text-xs font-mono">
+                <span className="w-2 h-2 rounded-full bg-[hsl(280,100%,70%)]"></span>
+                <span className="text-white">Staff</span>
+            </div>
          </div>
       </div>
     </div>

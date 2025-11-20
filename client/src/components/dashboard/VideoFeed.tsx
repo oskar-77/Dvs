@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { Maximize, User, Target, Info } from "lucide-react";
 import cctvImage from "@assets/generated_images/cctv_footage_of_retail_store.png";

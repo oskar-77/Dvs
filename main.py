@@ -1,6 +1,7 @@
-def main():
-    print("Hello from repl-nix-workspace!")
+from python_backend.app import create_app
 
+app = create_app()
 
 if __name__ == "__main__":
-    main()
+    port = 5000
+    app.run(host='0.0.0.0', port=port, debug=True)

@@ -7,17 +7,35 @@ from flask import Flask, send_from_directory
 from flask_cors import CORS
 from python_backend.config.database import init_db
 from python_backend.routes.api_routes import api_bp
+from python_backend.routes.camera_routes import camera_bp
+from python_backend.routes.websocket_routes import init_websocket
 
 def create_app():
     build_path = os.path.join(os.path.dirname(__file__), '..', 'dist', 'public')
     build_path = os.path.abspath(build_path)
     app = Flask(__name__, static_folder=build_path, static_url_path=None)
     
-    CORS(app, resources={r"/api/*": {"origins": "*"}})
+    CORS(app, resources={r"/api/*": {"origins": "*"}, r"/ws/*": {"origins": "*"}})
     
     init_db(app)
     
     app.register_blueprint(api_bp)
+    app.register_blueprint(camera_bp)
+    
+    init_websocket(app)
+    
+    from python_backend.models.models import Camera
+    from python_backend.camera import camera_manager
+    from python_backend.config.database import db as database
+    
+    with app.app_context():
+        cameras = database.session.query(Camera).filter_by(status='active').all()
+        for camera in cameras:
+            try:
+                camera_manager.add_camera(camera.camera_index, camera.rtsp_url)
+                print(f"Loaded camera: {camera.name} (index: {camera.camera_index})")
+            except Exception as e:
+                print(f"Failed to load camera {camera.name}: {e}")
     
     @app.route('/', defaults={'path': ''})
     @app.route('/<path:path>')

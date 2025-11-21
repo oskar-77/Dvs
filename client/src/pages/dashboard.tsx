@@ -1,4 +1,4 @@
-import React from "react";
+import { useState } from "react";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { VideoFeed } from "@/components/dashboard/VideoFeed";
 import { StatsCard } from "@/components/dashboard/StatsCard";
@@ -7,8 +7,20 @@ import { DemographicsChart } from "@/components/dashboard/DemographicsChart";
 import { TrafficChart } from "@/components/dashboard/TrafficChart";
 import { Users, Clock, LogIn, Activity } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useOverviewStats } from "@/hooks/useStats";
+import { useCameras } from "@/hooks/useCameras";
+
+function formatDwellTime(seconds: number): string {
+  const minutes = Math.floor(seconds / 60);
+  const secs = seconds % 60;
+  return `${minutes}m ${secs}s`;
+}
 
 export default function Dashboard() {
+  const [selectedCamera, setSelectedCamera] = useState(0);
+  const { data: stats, isLoading: statsLoading } = useOverviewStats();
+  const { data: cameras } = useCameras();
+
   return (
     <DashboardLayout>
       <div className="space-y-6 max-w-[1600px] mx-auto">
@@ -17,35 +29,27 @@ export default function Dashboard() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <StatsCard 
             title="Total Visitors" 
-            value="1,284" 
-            trend="+12.5%" 
-            trendUp={true} 
+            value={statsLoading ? "..." : stats?.total_visitors || 0} 
             icon={Users} 
             description="Today's count"
           />
           <StatsCard 
             title="Avg Dwell Time" 
-            value="18m 42s" 
-            trend="-2.1%" 
-            trendUp={false} 
+            value={statsLoading ? "..." : formatDwellTime(stats?.avg_dwell_time || 0)} 
             icon={Clock}
             description="Per customer"
           />
           <StatsCard 
             title="Current Occupancy" 
-            value="42" 
-            trend="+5" 
-            trendUp={true} 
+            value={statsLoading ? "..." : stats?.current_occupancy || 0} 
             icon={LogIn}
             description="Live count"
           />
           <StatsCard 
             title="Zone Engagement" 
-            value="89%" 
-            trend="+1.2%" 
-            trendUp={true} 
+            value={statsLoading ? "..." : `${stats?.zone_engagement || 0}%`} 
             icon={Activity}
-            description="Apparel Section"
+            description="Average across zones"
           />
         </div>
 
@@ -56,15 +60,20 @@ export default function Dashboard() {
             <div className="flex items-center justify-between mb-2">
               <h2 className="text-lg font-display font-semibold text-primary">Live Surveillance Analysis</h2>
               <div className="flex gap-2">
-                <Button variant="outline" size="sm" className="h-8 border-primary/30 text-primary hover:bg-primary/10">
-                  CAM 01
-                </Button>
-                <Button variant="outline" size="sm" className="h-8 border-border text-muted-foreground">
-                  CAM 02
-                </Button>
+                {cameras?.map((camera) => (
+                  <Button 
+                    key={camera.id}
+                    variant="outline" 
+                    size="sm" 
+                    className={`h-8 ${selectedCamera === camera.cameraIndex ? 'border-primary/30 text-primary hover:bg-primary/10' : 'border-border text-muted-foreground'}`}
+                    onClick={() => setSelectedCamera(camera.cameraIndex)}
+                  >
+                    CAM {camera.cameraIndex.toString().padStart(2, '0')}
+                  </Button>
+                ))}
               </div>
             </div>
-            <VideoFeed />
+            <VideoFeed cameraIndex={selectedCamera} />
             
             <div className="mt-8">
               <h2 className="text-lg font-display font-semibold text-primary mb-4">Traffic Trends</h2>

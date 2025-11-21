@@ -14,6 +14,9 @@ class Zone(db.Model):
     
     zone_stats = relationship('ZoneStats', back_populates='zone')
     tracking_events = relationship('TrackingEvent', back_populates='zone')
+    
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
 
 class Customer(db.Model):
     __tablename__ = 'customers'
@@ -29,6 +32,9 @@ class Customer(db.Model):
     
     visits = relationship('Visit', back_populates='customer')
     tracking_events = relationship('TrackingEvent', back_populates='customer')
+    
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
 
 class Visit(db.Model):
     __tablename__ = 'visits'
@@ -54,6 +60,9 @@ class TrackingEvent(db.Model):
     
     customer = relationship('Customer', back_populates='tracking_events')
     zone = relationship('Zone', back_populates='tracking_events')
+    
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
 
 class Alert(db.Model):
     __tablename__ = 'alerts'
@@ -66,6 +75,9 @@ class Alert(db.Model):
     status: Mapped[str] = mapped_column(Text, default='active')
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
     resolved_at: Mapped[datetime] = mapped_column(DateTime, nullable=True)
+    
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
 
 class ZoneStats(db.Model):
     __tablename__ = 'zone_stats'
@@ -78,3 +90,17 @@ class ZoneStats(db.Model):
     avg_dwell_time: Mapped[int] = mapped_column(Integer, default=0)
     
     zone = relationship('Zone', back_populates='zone_stats')
+
+class Camera(db.Model):
+    __tablename__ = 'cameras'
+    
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    name: Mapped[str] = mapped_column(Text, nullable=False)
+    camera_index: Mapped[int] = mapped_column(Integer, nullable=False, unique=True)
+    location: Mapped[str] = mapped_column(Text, nullable=True)
+    status: Mapped[str] = mapped_column(Text, default='active')
+    rtsp_url: Mapped[str] = mapped_column(Text, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)

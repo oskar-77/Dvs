@@ -5,7 +5,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from datetime import datetime, timedelta
 import random
 from python_backend.app import create_app
-from python_backend.models.models import Zone, Customer, Visit, Alert, ZoneStats, TrackingEvent
+from python_backend.models.models import Zone, Customer, Visit, Alert, ZoneStats, TrackingEvent, Camera
 from python_backend.config.database import db
 
 def seed_database():
@@ -19,6 +19,7 @@ def seed_database():
         Alert.query.delete()
         Customer.query.delete()
         Zone.query.delete()
+        Camera.query.delete()
         db.session.commit()
         
         print("Creating zones...")
@@ -102,6 +103,23 @@ def seed_database():
         
         db.session.commit()
         print(f"Created {len(alerts)} alerts")
+        
+        print("Creating camera...")
+        camera = Camera(
+            name="Main Entrance Camera",
+            camera_index=0,
+            location="Main Entrance",
+            status="active"
+        )
+        db.session.add(camera)
+        db.session.commit()
+        
+        from python_backend.camera import camera_manager
+        try:
+            camera_manager.add_camera(0)
+            print("Created and activated camera")
+        except Exception as e:
+            print(f"Camera created in DB but couldn't activate (normal if no physical camera): {e}")
         
         print("Creating zone stats...")
         for zone in zones:

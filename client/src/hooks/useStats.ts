@@ -22,28 +22,32 @@ interface TrafficData {
 
 export function useOverviewStats() {
   return useQuery<OverviewStats>({
-    queryKey: ["/api/stats/overview"],
+    queryKey: ["api", "stats", "overview"],
     refetchInterval: 5000,
+    staleTime: 0,
   });
 }
 
 export function useDemographics() {
   return useQuery<Demographics>({
-    queryKey: ["/api/analytics/demographics"],
+    queryKey: ["api", "analytics", "demographics"],
     refetchInterval: 10000,
+    staleTime: 0,
   });
 }
 
 export function useTrafficData() {
   return useQuery<TrafficData[]>({
-    queryKey: ["/api/analytics/traffic"],
+    queryKey: ["api", "analytics", "traffic"],
     refetchInterval: 30000,
+    staleTime: 0,
   });
 }
 
 export function useLiveTracking() {
   return useQuery({
-    queryKey: ["/api/tracking/live"],
+    queryKey: ["api", "tracking", "live"],
     refetchInterval: 2000,
+    staleTime: 0,
   });
 }

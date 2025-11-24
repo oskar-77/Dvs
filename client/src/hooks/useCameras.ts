@@ -14,8 +14,9 @@ interface Camera {
 
 export function useCameras() {
   return useQuery<Camera[]>({
-    queryKey: ["/api/cameras"],
+    queryKey: ["api", "cameras"],
     refetchInterval: 5000,
+    staleTime: 0,
   });
 }
 
@@ -28,7 +29,7 @@ export function useAddCamera() {
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/cameras"] });
+      queryClient.invalidateQueries({ queryKey: ["api", "cameras"] });
     },
   });
 }
@@ -41,7 +42,7 @@ export function useDeleteCamera() {
       await apiRequest("DELETE", `/api/cameras/${cameraId}`);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/cameras"] });
+      queryClient.invalidateQueries({ queryKey: ["api", "cameras"] });
     },
   });
 }

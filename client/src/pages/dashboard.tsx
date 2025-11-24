@@ -18,7 +18,7 @@ function formatDwellTime(seconds: number): string {
 
 export default function Dashboard() {
   const [selectedCamera, setSelectedCamera] = useState(0);
-  const { data: stats, isLoading: statsLoading } = useOverviewStats();
+  const { data: stats } = useOverviewStats();
   const { data: cameras } = useCameras();
 
   return (
@@ -29,25 +29,25 @@ export default function Dashboard() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <StatsCard 
             title="Total Visitors" 
-            value={statsLoading ? "..." : stats?.total_visitors || 0} 
+            value={stats?.total_visitors ?? "0"} 
             icon={Users} 
             description="Today's count"
           />
           <StatsCard 
             title="Avg Dwell Time" 
-            value={statsLoading ? "..." : formatDwellTime(stats?.avg_dwell_time || 0)} 
+            value={formatDwellTime(stats?.avg_dwell_time ?? 0)} 
             icon={Clock}
             description="Per customer"
           />
           <StatsCard 
             title="Current Occupancy" 
-            value={statsLoading ? "..." : stats?.current_occupancy || 0} 
+            value={stats?.current_occupancy ?? "0"} 
             icon={LogIn}
             description="Live count"
           />
           <StatsCard 
             title="Zone Engagement" 
-            value={statsLoading ? "..." : `${stats?.zone_engagement || 0}%`} 
+            value={`${stats?.zone_engagement ?? 0}%`} 
             icon={Activity}
             description="Average across zones"
           />

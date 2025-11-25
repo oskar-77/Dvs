@@ -191,4 +191,4 @@ python -c "import flask, cv2, sqlalchemy; print('All imports OK')"
 
 ## 📞 الدعم
 
-تم إنشاء هذا النظام بواسطة Replit Agent. جميع الملفات والكود موثقة ومنظمة.
+تم إنشاء هذا النظام بواسطة Eng.Abdulrazzaq Al-Surabi 

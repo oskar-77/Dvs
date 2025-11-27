@@ -37,18 +37,17 @@ def add_camera():
         rtsp_url = data.get('rtspUrl')
         
         if camera_index is None:
-            return jsonify({'error': 'Camera index is required'}), 400
+            return jsonify({'error': 'رقم الكاميرا مطلوب'}), 400
+        
+        if not name:
+            return jsonify({'error': 'اسم الكاميرا مطلوب'}), 400
         
         existing = db.session.query(Camera).filter_by(camera_index=camera_index).first()
         if existing:
-            return jsonify({'error': 'Camera with this index already exists'}), 400
-        
-        success = camera_manager.add_camera(camera_index, rtsp_url)
-        if not success:
-            return jsonify({'error': 'Failed to connect to camera'}), 500
+            return jsonify({'error': 'يوجد كاميرا بنفس الرقم مسبقاً'}), 400
         
         camera = Camera(
-            name=name or f"Camera {camera_index}",
+            name=name,
             camera_index=camera_index,
             location=location,
             rtsp_url=rtsp_url,
@@ -58,12 +57,15 @@ def add_camera():
         db.session.add(camera)
         db.session.commit()
         
+        camera_manager.add_camera(camera_index, rtsp_url)
+        
         return jsonify({
             'id': camera.id,
             'name': camera.name,
             'cameraIndex': camera.camera_index,
             'location': camera.location,
-            'status': camera.status
+            'status': camera.status,
+            'rtspUrl': camera.rtsp_url
         }), 201
     except Exception as e:
         db.session.rollback()

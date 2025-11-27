@@ -104,3 +104,29 @@ class Camera(db.Model):
     
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
+
+
+class SystemSettings(db.Model):
+    __tablename__ = 'system_settings'
+    
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    key: Mapped[str] = mapped_column(String(100), nullable=False, unique=True)
+    value: Mapped[str] = mapped_column(Text, nullable=True)
+    category: Mapped[str] = mapped_column(String(50), nullable=False, default='general')
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+
+
+class NotificationSettings(db.Model):
+    __tablename__ = 'notification_settings'
+    
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    alert_type: Mapped[str] = mapped_column(String(50), nullable=False)
+    enabled: Mapped[bool] = mapped_column(Boolean, default=True)
+    sound_enabled: Mapped[bool] = mapped_column(Boolean, default=True)
+    email_enabled: Mapped[bool] = mapped_column(Boolean, default=False)
+    
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)

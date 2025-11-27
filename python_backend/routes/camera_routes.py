@@ -80,9 +80,71 @@ def delete_camera(camera_id):
         db.session.delete(camera)
         db.session.commit()
         
-        return jsonify({'success': True})
+        return jsonify({'success': True, 'message': 'Camera deleted successfully'})
     except Exception as e:
         db.session.rollback()
+        return jsonify({'error': str(e)}), 500
+
+
+@camera_bp.route('/<int:camera_id>', methods=['PUT'])
+def update_camera(camera_id):
+    try:
+        camera = db.session.query(Camera).filter_by(id=camera_id).first()
+        if not camera:
+            return jsonify({'error': 'Camera not found'}), 404
+        
+        data = request.get_json()
+        
+        if 'name' in data:
+            camera.name = data['name']
+        if 'location' in data:
+            camera.location = data['location']
+        if 'status' in data:
+            camera.status = data['status']
+            if data['status'] == 'inactive':
+                camera_manager.remove_camera(camera.camera_index)
+            elif data['status'] == 'active':
+                camera_manager.add_camera(camera.camera_index, camera.rtsp_url)
+        if 'rtspUrl' in data:
+            old_rtsp = camera.rtsp_url
+            camera.rtsp_url = data['rtspUrl']
+            if old_rtsp != data['rtspUrl']:
+                camera_manager.remove_camera(camera.camera_index)
+                if camera.status == 'active':
+                    success = camera_manager.add_camera(camera.camera_index, data['rtspUrl'])
+                    if not success:
+                        return jsonify({'error': 'Failed to connect to new camera URL'}), 500
+        
+        db.session.commit()
+        
+        return jsonify({
+            'id': camera.id,
+            'name': camera.name,
+            'cameraIndex': camera.camera_index,
+            'location': camera.location,
+            'status': camera.status,
+            'rtspUrl': camera.rtsp_url,
+            'message': 'Camera updated successfully'
+        })
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
+
+
+@camera_bp.route('/<int:camera_id>/test', methods=['POST'])
+def test_camera_connection(camera_id):
+    try:
+        camera = db.session.query(Camera).filter_by(id=camera_id).first()
+        if not camera:
+            return jsonify({'error': 'Camera not found'}), 404
+        
+        is_connected = camera_manager.test_connection(camera.camera_index, camera.rtsp_url)
+        
+        return jsonify({
+            'connected': is_connected,
+            'message': 'Camera is connected' if is_connected else 'Camera connection failed'
+        })
+    except Exception as e:
         return jsonify({'error': str(e)}), 500
 
 @camera_bp.route('/<int:camera_index>/stream', methods=['GET'])

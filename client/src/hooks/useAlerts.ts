@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
+import { toast } from "sonner";
 
 export interface Alert {
   id: number;
@@ -49,7 +50,15 @@ export function useCreateAlert() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/alerts"] });
+      toast.success("تم إنشاء التنبيه", {
+        description: "تمت إضافة التنبيه الجديد بنجاح"
+      });
     },
+    onError: (error: Error) => {
+      toast.error("فشل إنشاء التنبيه", {
+        description: error.message
+      });
+    }
   });
 }
 
@@ -63,6 +72,14 @@ export function useResolveAlert() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/alerts"] });
+      toast.success("تم حل التنبيه", {
+        description: "تم تحديث حالة التنبيه إلى 'تم الحل'"
+      });
     },
+    onError: (error: Error) => {
+      toast.error("فشل حل التنبيه", {
+        description: error.message
+      });
+    }
   });
 }

@@ -85,5 +85,21 @@ class CameraManager:
     
     def is_camera_active(self, camera_index: int) -> bool:
         return camera_index in self.cameras and self.running.get(camera_index, False)
+    
+    def test_connection(self, camera_index: int, rtsp_url: Optional[str] = None) -> bool:
+        try:
+            if rtsp_url:
+                cap = cv2.VideoCapture(rtsp_url)
+            else:
+                cap = cv2.VideoCapture(camera_index)
+            
+            if cap.isOpened():
+                ret, _ = cap.read()
+                cap.release()
+                return ret
+            return False
+        except Exception as e:
+            print(f"Error testing camera connection: {e}")
+            return False
 
 camera_manager = CameraManager()

@@ -321,3 +321,143 @@ def ai_detect():
         })
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
+
+@api_bp.route('/settings', methods=['GET'])
+def get_settings():
+    from python_backend.models.models import SystemSettings
+    try:
+        category = request.args.get('category')
+        
+        query = db.session.query(SystemSettings)
+        if category:
+            query = query.filter_by(category=category)
+        
+        settings = query.all()
+        
+        settings_dict = {}
+        for s in settings:
+            if s.category not in settings_dict:
+                settings_dict[s.category] = {}
+            settings_dict[s.category][s.key] = s.value
+        
+        return jsonify(settings_dict)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@api_bp.route('/settings', methods=['POST', 'PUT'])
+def save_settings():
+    from python_backend.models.models import SystemSettings
+    try:
+        data = request.get_json()
+        
+        for category, settings in data.items():
+            for key, value in settings.items():
+                existing = db.session.query(SystemSettings).filter_by(
+                    key=key, category=category
+                ).first()
+                
+                if existing:
+                    existing.value = str(value) if value is not None else None
+                else:
+                    new_setting = SystemSettings(
+                        key=key,
+                        value=str(value) if value is not None else None,
+                        category=category
+                    )
+                    db.session.add(new_setting)
+        
+        db.session.commit()
+        return jsonify({'success': True, 'message': 'Settings saved successfully'})
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
+
+
+@api_bp.route('/settings/<category>/<key>', methods=['GET'])
+def get_setting(category, key):
+    from python_backend.models.models import SystemSettings
+    try:
+        setting = db.session.query(SystemSettings).filter_by(
+            key=key, category=category
+        ).first()
+        
+        if not setting:
+            return jsonify({'value': None})
+        
+        return jsonify({'key': setting.key, 'value': setting.value, 'category': setting.category})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@api_bp.route('/notifications/settings', methods=['GET'])
+def get_notification_settings():
+    from python_backend.models.models import NotificationSettings
+    try:
+        settings = db.session.query(NotificationSettings).all()
+        
+        return jsonify([{
+            'id': s.id,
+            'alertType': s.alert_type,
+            'enabled': s.enabled,
+            'soundEnabled': s.sound_enabled,
+            'emailEnabled': s.email_enabled
+        } for s in settings])
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@api_bp.route('/notifications/settings', methods=['POST', 'PUT'])
+def save_notification_settings():
+    from python_backend.models.models import NotificationSettings
+    try:
+        data = request.get_json()
+        
+        for item in data:
+            existing = db.session.query(NotificationSettings).filter_by(
+                alert_type=item.get('alertType')
+            ).first()
+            
+            if existing:
+                existing.enabled = item.get('enabled', True)
+                existing.sound_enabled = item.get('soundEnabled', True)
+                existing.email_enabled = item.get('emailEnabled', False)
+            else:
+                new_setting = NotificationSettings(
+                    alert_type=item.get('alertType'),
+                    enabled=item.get('enabled', True),
+                    sound_enabled=item.get('soundEnabled', True),
+                    email_enabled=item.get('emailEnabled', False)
+                )
+                db.session.add(new_setting)
+        
+        db.session.commit()
+        return jsonify({'success': True, 'message': 'Notification settings saved'})
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
+
+
+@api_bp.route('/system/status', methods=['GET'])
+def get_system_status():
+    from python_backend.models.models import Camera
+    from python_backend.camera import camera_manager
+    try:
+        cameras = db.session.query(Camera).all()
+        active_cameras = camera_manager.get_active_cameras()
+        
+        return jsonify({
+            'totalCameras': len(cameras),
+            'activeCameras': len(active_cameras),
+            'databaseConnected': True,
+            'aiReady': True
+        })
+    except Exception as e:
+        return jsonify({
+            'totalCameras': 0,
+            'activeCameras': 0,
+            'databaseConnected': False,
+            'aiReady': False,
+            'error': str(e)
+        }), 500

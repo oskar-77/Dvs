@@ -98,10 +98,28 @@ The Flask backend automatically:
 - Database migrations handled by SQLAlchemy
 - Static files served from `dist/public/`
 
-## Recent Setup (Nov 27, 2025)
+## Recent Updates (Nov 27, 2025)
+
+### Initial Setup
 - ✅ Installed Python dependencies with uv
 - ✅ Installed Node.js dependencies with npm
 - ✅ Built React frontend
 - ✅ Configured Flask workflow on port 5000
 - ✅ Set up deployment configuration
 - ✅ Updated .gitignore for Python and Node.js
+
+### API Integration (Nov 27, 2025)
+- ✅ Created useAlerts hook for alerts management (create, resolve, filter)
+- ✅ Created useZones hook for zone data and statistics
+- ✅ Connected Alerts page to backend with real-time data refresh
+- ✅ Connected Settings page with camera management from database
+- ✅ Connected Dashboard with real alerts and statistics
+- ✅ Connected Analytics page with zone data
+- ✅ Created seed_data.py script for populating test data
+- ✅ Created comprehensive Arabic README.md with usage instructions
+
+### React Query Hooks
+- `client/src/hooks/useAlerts.ts` - Alerts CRUD operations
+- `client/src/hooks/useZones.ts` - Zone data and statistics
+- `client/src/hooks/useCameras.ts` - Camera management
+- `client/src/hooks/useStats.ts` - Dashboard statistics

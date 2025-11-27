@@ -81,10 +81,12 @@ def seed_database():
         
         print("Creating alerts...")
         alert_types = [
-            ('overcrowding', 'High Occupancy Alert', 'Apparel Section has exceeded capacity'),
-            ('security', 'Security Alert', 'Unauthorized access detected'),
-            ('queue', 'Queue Alert', 'Long queue at checkout'),
-            ('maintenance', 'Maintenance Required', 'Camera 3 needs attention')
+            ('critical', 'Crowd Density Limit Exceeded', 'Zone has exceeded maximum capacity (45/40 people).'),
+            ('critical', 'Blacklisted Person Identified', 'Match found in database with 92% confidence.'),
+            ('warning', 'Long Queue Detected', 'Checkout line waiting time > 5 minutes.'),
+            ('warning', 'Loitering Detected', 'Person detected dwelling > 20 mins without interaction.'),
+            ('info', 'Staff Entered Restricted Area', 'Staff member detected in Server Room.'),
+            ('info', 'Camera Feed Restored', 'Connection to camera #2 re-established.')
         ]
         
         alerts = []

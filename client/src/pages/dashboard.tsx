@@ -5,10 +5,12 @@ import { StatsCard } from "@/components/dashboard/StatsCard";
 import { ZoneHeatmap } from "@/components/dashboard/ZoneHeatmap";
 import { DemographicsChart } from "@/components/dashboard/DemographicsChart";
 import { TrafficChart } from "@/components/dashboard/TrafficChart";
-import { Users, Clock, LogIn, Activity } from "lucide-react";
+import { Users, Clock, LogIn, Activity, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useOverviewStats } from "@/hooks/useStats";
 import { useCameras } from "@/hooks/useCameras";
+import { useAlerts } from "@/hooks/useAlerts";
+import { Link } from "wouter";
 
 function formatDwellTime(seconds: number): string {
   const minutes = Math.floor(seconds / 60);
@@ -16,10 +18,19 @@ function formatDwellTime(seconds: number): string {
   return `${minutes}m ${secs}s`;
 }
 
+function formatAlertTime(dateString: string | null): string {
+  if (!dateString) return "N/A";
+  const date = new Date(dateString);
+  return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
+}
+
 export default function Dashboard() {
   const [selectedCamera, setSelectedCamera] = useState(0);
   const { data: stats } = useOverviewStats();
   const { data: cameras } = useCameras();
+  const { data: alerts = [] } = useAlerts();
+  
+  const recentAlerts = alerts.slice(0, 5);
 
   return (
     <DashboardLayout>
@@ -95,18 +106,34 @@ export default function Dashboard() {
 
              {/* Recent Alerts List */}
              <div className="bg-card/40 backdrop-blur border border-primary/20 rounded-lg p-4">
-                <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wider mb-3">Recent Alerts</h3>
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Recent Alerts</h3>
+                  <Link href="/alerts">
+                    <Button variant="ghost" size="sm" className="text-xs text-primary">View All</Button>
+                  </Link>
+                </div>
                 <div className="space-y-3">
-                  {[
-                    { time: "10:42 AM", msg: "High occupancy in Apparel Zone", type: "warn" },
-                    { time: "09:15 AM", msg: "Queue length > 5 customers", type: "info" },
-                    { time: "08:55 AM", msg: "Staff detection in restricted area", type: "crit" }
-                  ].map((alert, i) => (
-                    <div key={i} className="flex gap-3 items-start text-sm border-l-2 border-primary/30 pl-3 py-1">
-                      <span className="text-xs font-mono text-primary">{alert.time}</span>
-                      <span className="text-foreground/90">{alert.msg}</span>
+                  {recentAlerts.length === 0 ? (
+                    <div className="text-sm text-muted-foreground text-center py-4">
+                      <AlertCircle className="h-6 w-6 mx-auto mb-2 opacity-50" />
+                      No recent alerts
                     </div>
-                  ))}
+                  ) : (
+                    recentAlerts.map((alert) => (
+                      <div key={alert.id} className={`flex gap-3 items-start text-sm border-l-2 pl-3 py-1 ${
+                        alert.type === 'critical' ? 'border-red-500' : 
+                        alert.type === 'warning' ? 'border-yellow-500' : 'border-primary/30'
+                      }`}>
+                        <span className="text-xs font-mono text-primary whitespace-nowrap">{formatAlertTime(alert.createdAt)}</span>
+                        <div className="flex-1">
+                          <span className="text-foreground/90">{alert.title}</span>
+                          {alert.status === 'active' && (
+                            <span className="ml-2 text-xs text-red-400">(Active)</span>
+                          )}
+                        </div>
+                      </div>
+                    ))
+                  )}
                 </div>
              </div>
           </div>

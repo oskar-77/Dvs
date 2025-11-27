@@ -119,7 +119,16 @@ The Flask backend automatically:
 - ✅ Created comprehensive Arabic README.md with usage instructions
 
 ### React Query Hooks
-- `client/src/hooks/useAlerts.ts` - Alerts CRUD operations
+- `client/src/hooks/useAlerts.ts` - Alerts CRUD operations with Arabic toast notifications
 - `client/src/hooks/useZones.ts` - Zone data and statistics
-- `client/src/hooks/useCameras.ts` - Camera management
+- `client/src/hooks/useCameras.ts` - Camera management with validation and Arabic toast notifications
 - `client/src/hooks/useStats.ts` - Dashboard statistics
+- `client/src/hooks/useSettings.ts` - System settings management
+
+### Settings Page (Nov 27, 2025)
+- ✅ Fixed useCameras hook with proper queryFn for camera data fetching
+- ✅ Added useSettings hook for system settings management
+- ✅ Full Arabic localization for settings interface
+- ✅ All tabs working: الإعدادات العامة، الذكاء الاصطناعي، إدارة الكاميرات، المناطق، الإشعارات، الأمان
+- ✅ Camera management supports both local (index) and network (RTSP) cameras
+- ✅ Toast notifications in Arabic for all camera and settings operations
